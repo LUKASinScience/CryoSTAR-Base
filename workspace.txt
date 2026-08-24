@@ -1,0 +1,14 @@
+your-workspace/          ← open this folder in VS Code
+│
+├── pyproject.toml       ← put it HERE, at the root
+│
+└── cryostarbase/          ← the Python package
+    ├── __init__.py
+    ├── cli.py
+    ├── server.py
+    ├── core.py
+    ├── models.py
+    └── frontend/
+        ├── index.html
+        ├── style.css
+        └── app.js

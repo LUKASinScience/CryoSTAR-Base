@@ -1,0 +1,120 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cryostarbase"
+version = "0.5.0"
+description = "CryoSTAR-Base — Cryo-ET project management & STA pipeline GUI"
+authors = [
+    { name = "Lukas W. Bauer" },
+    { name = "Claude" },
+]
+license = { text = "MIT" }
+requires-python = ">=3.9"
+dependencies = [
+    # ── Web server ────────────────────────────────────────────────────────────
+    "fastapi>=0.104.0",
+    "uvicorn[standard]>=0.24.0",
+    "websockets>=12.0",
+    "pydantic>=2.5.0",
+    "python-multipart>=0.0.9",
+
+    # ── Core science / analysis ───────────────────────────────────────────────
+    "numpy>=1.24.0",
+    "scipy>=1.10.0",
+    "matplotlib>=3.7.0",
+    "pandas>=2.0.0",
+    "starfile>=0.5.6",          # STAR file I/O (TM analysis, RELION export)
+
+    # ── System info (Computing tab auto-detect) ───────────────────────────────
+    "psutil>=5.9.0",
+
+    # ── XML parsing (Warp XML read/write in extract_warp_xml script) ─────────
+    # xml.etree.ElementTree is stdlib — no extra dep needed.
+    # lxml is optional but recommended for faster/safer XML handling:
+    # "lxml>=4.9.0",             # uncomment if you switch to lxml
+
+    # ── MRC file reading — Inspect Data tab (tilt stack viewer) ─────────────
+    "mrcfile>=1.5.0",           # read .mrc/.mrcs tilt stacks
+    "Pillow>=10.0.0",           # convert MRC slices to JPEG for browser
+
+    # ── CLI helper for bundled scripts ───────────────────────────────────────
+    "typer>=0.9.0",             # used by relion_class analysis + extract scripts
+    "click>=8.0.0",             # used by Hamid Rahmani's warp_lamella_adapters scripts
+
+    # ── Data visualisation scripts (TM analysis, LCC plots) ──────────────────
+    # matplotlib + pandas + scipy already listed above — nothing extra needed.
+]
+
+[project.optional-dependencies]
+
+# MRC file reading — mrcfile and Pillow are now in required dependencies.
+# This optional group is kept for backwards compatibility.
+mrc = [
+    # mrcfile and Pillow now in required deps (needed for Inspect Data tab)
+]
+
+# Miss Alignment XML curation helper (update_warp_xml / warpylib).
+# warpylib ships with the miss-alignment conda package.
+# Install miss-alignment first:  conda create -n miss-alignment ...
+# Then:  pip install cryostarbase[missalign]  (adds torch inside that env)
+#
+# NOTE: torch and warpylib are NOT listed as hard deps of cryostarbase because:
+#   - torch is large (~2 GB) and version must match CUDA on the target machine
+#   - warpylib is only available inside the miss-alignment conda environment
+#   - The XML update step (Step B of the Miss Alignment job) is run via
+#     `python -c "..."` inside the miss-alignment environment, not inside
+#     the cryostarbase process itself.  No import needed in cryostarbase code.
+missalign = [
+    "torch>=2.0.0",             # must match CUDA; install manually in miss-alignment env
+    # warpylib is installed by the miss-alignment installer — not on PyPI
+]
+
+# Slabify (lamella mask generation)
+# slabify-et ships its own CLI; cryostarbase just wraps the command.
+# Install separately:  pip install slabify-et
+slabify = [
+    # no extra dep inside cryostarbase — slabify-et is an external tool
+]
+
+# Trame Tomo Viewer (tomo_web_viewer.py)
+# Install in the same environment as CryoSTAR-Base:
+#   pip install cryostarbase[trame]
+# Then launch via "Open in Tomo Viewer" button in Inspect Data tab (Tomograms sub-tab).
+# Remote access needs a second SSH tunnel: -L 8788:localhost:8788
+trame = [
+    "trame>=3.0.0",
+    "trame-vuetify>=2.3.0",
+    "trame-client>=3.0.0",
+]
+
+# Full science extras (einops for relion_class analysis script)
+science = [
+    "mrcfile>=1.5.0",
+    "einops>=0.7.0",            # used in analyze_relion_classes script
+]
+
+dev = [
+    "pytest",
+    "httpx",
+]
+
+[project.scripts]
+cryostarbase               = "cryostarbase.cli:main"
+cryostarbase-extract-xml     = "cryostarbase.scripts.extract_warp_xml:main"
+cryostarbase-ang2pix         = "cryostarbase.scripts.ang_to_pix:main"
+cryostarbase-slabify-all     = "cryostarbase.scripts.slabify_loop:main"
+cryostarbase-tm-scripts      = "cryostarbase.scripts.tm_loop:main"
+cryostarbase-extract-scripts = "cryostarbase.scripts.extract_loop:main"
+cryostarbase-merge-convert   = "cryostarbase.scripts.merge_and_convert:main"
+cryostarbase-analyze-classes = "cryostarbase.scripts.analyze_relion_classes:main"
+cryostarbase-transfer-lcc    = "cryostarbase.scripts.transfer_lcc_values:main"
+cryostarbase-plot-lcc        = "cryostarbase.scripts.plot_lcc_per_class:main"
+
+[tool.setuptools.packages.find]
+include = ["cryostarbase*"]
+
+[tool.setuptools.package-data]
+"cryostarbase.frontend" = ["*.html", "*.css", "*.js"]
+"cryostarbase.scripts"  = ["*.py"]

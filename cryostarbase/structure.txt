@@ -1,0 +1,9 @@
+cryostarbase/
+├── cli.py              # `cryostarbase` entry point — options, launches server
+├── server.py           # FastAPI app — all REST + WebSocket routes, serves frontend/
+├── core.py             # All business logic — file ops, star parser, runner, converter, checks
+├── models.py           # Pydantic request/response models
+└── frontend/
+    ├── index.html
+    ├── style.css
+    └── app.js
