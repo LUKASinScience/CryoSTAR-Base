@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+*.egg-info/
+dist/
+build/
+
+# Data — never commit
+workspace/
+*.mrc
+*.tif
+*.eer
+*.star
+
+# Logs
+*.log
+nohup.out
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# SSH keys — never commit
+gitkey
+gitkey.pub

@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "CryoSTAR-Base"
+abstract: "Web-based project management and analysis pipeline for cryo-electron tomography, integrating AreTomo3, WarpTools, PyTom template matching, and RELION subtomogram averaging into a unified workflow."
+authors:
+  - given-names: "Lukas W."
+    family-names: "Bauer"
+  - name: "Claude (Anthropic)"
+version: "0.5.0"
+date-released: "2026-08-20"
+repository-code: "https://github.com/LUKASinScience/cryostarbase"
+license: MIT
+keywords:
+  - cryo-electron tomography
+  - cryo-ET
+  - subtomogram averaging
+  - structural biology
+  - WarpTools
+  - RELION
+  - PyTom
