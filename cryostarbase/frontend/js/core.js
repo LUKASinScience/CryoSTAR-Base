@@ -442,6 +442,54 @@ function py2relyStopPoll(){
   if(_py2relyPollTimer){clearInterval(_py2relyPollTimer);_py2relyPollTimer=null;}
 }
 
+// ── reliontree job tree (shares the RELION directory selected in the py2rely tab) ──
+var _reliontreeUrl='';
+
+function reliontreeMsg(text,isError){
+  var el=$('reliontreeMsg');
+  if(el){el.textContent=text;el.style.color=isError?'var(--rd)':'var(--dm)';}
+}
+
+function reliontreeUpdateStatus(s){
+  var badge=$('reliontreeStatusBadge'),openBtn=$('reliontreeOpenBtn'),stopBtn=$('reliontreeStopBtn');
+  if(s.running&&s.url)_reliontreeUrl=s.url;
+  if(badge){badge.textContent=s.running?'● Running':'○ Stopped';badge.className=s.running?'badge running':'badge';}
+  if(openBtn)openBtn.style.display=s.running?'':'none';
+  if(stopBtn)stopBtn.style.display=s.running?'':'none';
+}
+
+async function reliontreeLaunch(){
+  if(!_py2relySelected){reliontreeMsg('Select a RELION working directory above first.',true);return;}
+  if(!curProj){reliontreeMsg('No project selected.',true);return;}
+  var portEl=$('reliontreePort');
+  var port=parseInt((portEl?portEl.value:'8710')||'8710');
+  try{
+    const cfg=await api('/api/projects/'+curProj+'/config');
+    var relionDir=((cfg.project_dir||'')?cfg.project_dir+'/':'')+'relion_sta/'+_py2relySelected;
+    reliontreeMsg('Starting reliontree…',false);
+    const r=await post('/api/reliontree/start',{relion_dir:relionDir,port:port});
+    if(r.error){reliontreeMsg('Error: '+r.error,true);return;}
+    _reliontreeUrl=r.url;
+    reliontreeUpdateStatus({running:true,url:r.url});
+    reliontreeMsg('Running at '+r.url,false);
+    window.open(r.url,'_blank');
+  }catch(e){
+    reliontreeMsg('Error: '+(e.message||e),true);
+  }
+}
+
+function reliontreeOpen(){
+  if(_reliontreeUrl)window.open(_reliontreeUrl,'_blank');
+}
+
+async function reliontreeStop(){
+  try{
+    await post('/api/reliontree/stop',{});
+    reliontreeUpdateStatus({running:false});
+    reliontreeMsg('Job tree viewer stopped.',false);
+  }catch(e){reliontreeMsg('Error: '+(e.message||e),true);}
+}
+
 // ── Computing Tab ──
 var _compType = '';
 

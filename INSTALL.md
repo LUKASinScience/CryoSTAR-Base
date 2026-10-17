@@ -1,6 +1,6 @@
 # CryoSTAR-Base — Installation Guide
 
-**CryoSTAR-Base v0.5.0 — by Lukas W. Bauer und Claude**
+**CryoSTAR-Base v0.5.1 — by Lukas W. Bauer und Claude**
 
 ---
 
@@ -116,7 +116,7 @@ pip install -e ".[mrc]"
 
 **Expected output (last few lines):**
 ```
-Successfully installed cryostarbase-0.5.0 fastapi-... uvicorn-... pydantic-...
+Successfully installed cryostarbase-0.5.1 fastapi-... uvicorn-... pydantic-...
 ```
 
 ---
@@ -132,7 +132,7 @@ You should see:
 ```
 usage: cryostarbase [-h] [-d WORKSPACE_DIR] [-p PORT] [--host HOST] [--reload]
 
-CryoSTAR-Base v0.5.0 — Cryo-ET project management & STA pipeline GUI
+CryoSTAR-Base v0.5.1 — Cryo-ET project management & STA pipeline GUI
 ...
 ```
 
@@ -163,7 +163,7 @@ Then open **http://127.0.0.1:8787** in your browser.
 
 **Example output:**
 ```
-  CryoSTAR-Base v0.5.0  —  by Lukas W. Bauer und Claude
+  CryoSTAR-Base v0.5.1  —  by Lukas W. Bauer und Claude
   ────────────────────────────────────────────
   Browse dir :  /path_example/data
   URL        :  http://127.0.0.1:8787

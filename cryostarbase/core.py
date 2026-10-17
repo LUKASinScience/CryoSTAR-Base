@@ -1736,6 +1736,89 @@ def get_py2rely_status() -> dict:
     return {"running": running, "pid": _py2rely_proc.pid if (running and _py2rely_proc) else None,
             "port": _py2rely_port, "relion_dir": _py2rely_relion_dir}
 
+# ── reliontree (RELION job-lineage viewer, https://github.com/LUKASinScience/reliontree) ──
+# Runs INSIDE this process (reliontree >= 0.4.0: a read-only server in a background thread, 127.0.0.1 only) -- no
+# subprocess, no PATH lookup. Older reliontree installs fall back to the `reliontree watch` executable. Either way
+# nothing comes from the client except the project path, which must lie inside the workspace.
+_reliontree_srv = None          # reliontree.BackgroundServer when running in-process
+_reliontree_proc: "_subprocess.Popen | None" = None   # fallback: `reliontree watch` subprocess
+_reliontree_dir: str = ""
+_reliontree_port: int = 8710
+
+def _reliontree_starter():
+    """reliontree.start_background, or None if reliontree is missing or older than 0.4.0."""
+    try:
+        import reliontree
+        return getattr(reliontree, "start_background", None)
+    except ImportError:
+        return None
+
+def start_reliontree(relion_dir: str, port: int = 8710) -> dict:
+    """Serve a read-only live job-tree view of `relion_dir` on 127.0.0.1:port."""
+    global _reliontree_srv, _reliontree_proc, _reliontree_dir, _reliontree_port
+    stop_reliontree()
+    start = _reliontree_starter()
+    exe = shutil.which("reliontree") if start is None else None
+    if start is None and exe is None:
+        return {"error": 'reliontree is not installed -- install it with: pip install "git+https://github.com/LUKASinScience/reliontree"'}
+    if not 1024 <= int(port) <= 65535:
+        return {"error": "port must be between 1024 and 65535"}
+    wd = Path(relion_dir).resolve()
+    if not wd.is_relative_to(get_ws().workspace_dir.resolve()):
+        return {"error": "the RELION project must be inside the workspace"}
+    if not (wd / "default_pipeline.star").is_file():
+        return {"error": f"not a RELION project (no default_pipeline.star): {wd}"}
+    _reliontree_dir, _reliontree_port = str(wd), int(port)
+    url = f"http://127.0.0.1:{_reliontree_port}/"
+    if start is not None:
+        try:
+            _reliontree_srv = start(wd, _reliontree_port)
+        except OSError as e:
+            return {"error": f"could not listen on port {port} (in use?): {e}"}
+        return {"status": "started", "mode": "in-process", "port": _reliontree_port, "url": url, "relion_dir": _reliontree_dir}
+    try:
+        _reliontree_proc = _subprocess.Popen(
+            [exe, "watch", str(wd), "--no-open", "--port", str(int(port))],
+            stdout=_subprocess.DEVNULL, stderr=_subprocess.DEVNULL,
+        )
+        time.sleep(0.8)  # fail fast on a busy port / bad project
+        if _reliontree_proc.poll() is not None:
+            code = _reliontree_proc.returncode
+            _reliontree_proc = None
+            return {"error": f"reliontree exited immediately (code {code}); is port {port} in use?"}
+        return {"status": "started", "mode": "subprocess", "pid": _reliontree_proc.pid, "port": _reliontree_port,
+                "url": url, "relion_dir": _reliontree_dir}
+    except OSError as e:
+        return {"error": str(e)}
+
+def stop_reliontree() -> dict:
+    global _reliontree_srv, _reliontree_proc
+    if _reliontree_srv is not None:
+        try:
+            _reliontree_srv.stop()
+        except Exception:
+            pass
+        _reliontree_srv = None
+    if _reliontree_proc is not None:
+        try:
+            _reliontree_proc.terminate()
+            _reliontree_proc.wait(timeout=3)
+        except Exception:
+            try: _reliontree_proc.kill()
+            except Exception: pass
+        _reliontree_proc = None
+    return {"status": "stopped"}
+
+def get_reliontree_status() -> dict:
+    global _reliontree_srv, _reliontree_proc
+    running = (_reliontree_srv is not None and _reliontree_srv.alive()) or \
+              (_reliontree_proc is not None and _reliontree_proc.poll() is None)
+    if not running:
+        _reliontree_srv = _reliontree_proc = None
+    return {"running": running, "port": _reliontree_port, "relion_dir": _reliontree_dir,
+            "mode": "in-process" if _reliontree_srv is not None else ("subprocess" if running else None),
+            "url": f"http://127.0.0.1:{_reliontree_port}/" if running else None}
+
 def list_relion_sta_dirs(project_folder: str) -> dict:
     """List subdirectories of relion_sta/ for a project."""
     proj = get_ws().workspace_dir / project_folder

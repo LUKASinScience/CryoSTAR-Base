@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.1 — not yet released
+
+- Optional **job tree viewer**: a "Job tree (reliontree)" card in the py2rely tab starts a read-only [reliontree](https://github.com/LUKASinScience/reliontree) view of the selected RELION directory (`/api/reliontree/start|stop|status`). The command is fixed (`reliontree` from PATH), the project must be inside the workspace, the viewer listens on 127.0.0.1 only.
+- Documentation, screenshots and bug fixes made since the initial public release (see `git log v0.5.0..`).
+
 ## 0.5.0 — Initial Release
 
 Web-based project management and analysis pipeline for cryo-electron tomography, integrating AreTomo3, WarpTools, PyTom template matching, and RELION subtomogram averaging into a unified workflow.

@@ -815,6 +815,27 @@ def create_app(workspace_dir: str = ".") -> FastAPI:
     async def dashboard_status():
         return core.get_py2rely_status()
 
+    # ── reliontree job-tree viewer (read-only; fixed command, project must be inside the workspace) ──
+    @app.post("/api/reliontree/start")
+    async def reliontree_start(req: Request):
+        body = await req.json()
+        relion_dir = str(body.get("relion_dir", "")).strip()
+        if not relion_dir:
+            raise HTTPException(400, "relion_dir required")
+        try:
+            port = int(body.get("port", 8710))
+        except (TypeError, ValueError):
+            raise HTTPException(400, "port must be an integer")
+        return await asyncio.to_thread(core.start_reliontree, relion_dir, port)   # blocking liveness check
+
+    @app.post("/api/reliontree/stop")
+    async def reliontree_stop():
+        return core.stop_reliontree()
+
+    @app.get("/api/reliontree/status")
+    async def reliontree_status():
+        return core.get_reliontree_status()
+
     @app.get("/api/projects/{f}/relion_sta_dirs")
     async def relion_sta_dirs(f: str):
         return core.list_relion_sta_dirs(f)

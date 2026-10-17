@@ -27,6 +27,13 @@ pip install -e .
 
 **Requirements:** Python ≥3.9. For the full setup guide (HPC/cluster install, permanent shortcuts, troubleshooting), see **[INSTALL.md](INSTALL.md)**.
 
+### Optional: RELION job-tree viewer
+
+If [reliontree](https://github.com/LUKASinScience/reliontree) is installed (`pip install "git+https://github.com/LUKASinScience/reliontree"`),
+CryoSTAR-Base can start it for a RELION project inside your workspace: `POST /api/reliontree/start`
+with `{"relion_dir": "<project>/relion_sta/<dir>", "port": 8710}` (also `/api/reliontree/stop`, `GET /api/reliontree/status`).
+With reliontree 0.4.0 or newer it runs inside the CryoSTAR-Base process (a background thread, no subprocess); older versions fall back to the `reliontree watch` executable. It is a read-only live view of the job tree on 127.0.0.1 only.
+
 ### Create First Project
 
 ```bash
